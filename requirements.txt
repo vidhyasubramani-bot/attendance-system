@@ -1,4 +1,4 @@
 flask
 pymysql
 openpyxl
-gunicorm
+gunicorn
