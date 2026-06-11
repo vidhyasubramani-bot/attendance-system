@@ -12,7 +12,7 @@ import os
 # --- SARIYAANA DATABASE CONNECTION CONFIG ---
 def get_connection():
     return pymysql.connect(
-        host="localhost",
+        host="your-planetscale-host",
         user="root",
         password="Vidhya@2007",
         database="attendance",  # <-- 'attendance_db'க்கு பதிலா 'attendance'னு மாத்துங்க!
