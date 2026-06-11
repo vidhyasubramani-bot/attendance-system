@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-navbar">
+    <div class="logo"><strong>Smart Attendance System</strong></div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="{{ url_for('about') }}" style="color: var(--primary-blue); font-weight: 600;">About</a>
+        <a href="{{ url_for('contact') }}">Contact</a>
+        <a href="{{ url_for('login') }}" class="register-btn">Login</a>
+    </div>
+</div>
+
+<div class="login-container" style="min-height: 80vh; padding: 40px 20px;">
+    <div class="login-card" style="width: 800px; max-width: 100%; flex-direction: column; padding: 40px;">
+        <h2 style="color: var(--primary-blue); margin-bottom: 20px;"><i class="fas fa-info-circle"></i> About Our System</h2>
+        <p style="line-height: 1.6; color: #4a5568; font-size: 1.05rem;">
+            Welcome to the <strong>Smart Attendance System</strong>. This platform is designed to automate institutional attendance management efficiently and securely. Built using Flask and MySQL, it allows students to track their live attendance metrics while empowering administrators with comprehensive reporting tools.
+        </p>
+        <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0;">
+                <i class="fas fa-bolt" style="font-size: 2rem; color: var(--primary-blue); margin-bottom: 10px;"></i>
+                <h4>Fast Tracking</h4>
+                <p style="font-size: 0.9rem; color: #718096; margin: 0;">Instant database check & updates</p>
+            </div>
+            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0;">
+                <i class="fas fa-chart-pie" style="font-size: 2rem; color: var(--primary-blue); margin-bottom: 10px;"></i>
+                <h4>Analytics</h4>
+                <p style="font-size: 0.9rem; color: #718096; margin: 0;">Live calculation of percentage</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

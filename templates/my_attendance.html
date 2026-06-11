@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="display: flex; min-height: 100vh;">
+    <div style="width: 260px; background-color: #1a202c; color: white; padding-top: 30px;">
+        <h3 style="text-align: center; margin-bottom: 30px;">Smart Attendance</h3>
+        <p style="padding: 10px 25px; margin: 0;"><a href="{{ url_for('dashboard') }}" style="color: #cbd5e1; text-decoration: none;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a></p>
+    </div>
+    
+    <div style="flex: 1; padding: 40px; background-color: #f7fafc;">
+        <h2 style="color: #2d3748; margin-bottom: 25px;"><i class="fas fa-calendar-alt" style="color: #3182ce;"></i> Comprehensive Attendance Records</h2>
+        <div style="background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="background-color: #edf2f7; border-bottom: 2px solid #e2e8f0;">
+                        <th style="padding: 15px 20px; color: #4a5568; font-weight: 600;">Date Timestamp</th>
+                        <th style="padding: 15px 20px; color: #4a5568; font-weight: 600;">Course Subject Name</th>
+                        <th style="padding: 15px 20px; color: #4a5568; font-weight: 600;">Log Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in history %}
+                    <tr style="border-bottom: 1px solid #edf2f7;">
+                        <td style="padding: 15px 20px; color: #2d3748;">{{ log.date }}</td>
+                        <td style="padding: 15px 20px; color: #2d3748;">{{ log.subject }}</td>
+                        <td style="padding: 15px 20px;">
+                            <span style="background-color: {% if log.status == 'Present' %}#c6f6d5{% else %}#fed7d7{% endif %}; color: {% if log.status == 'Present' %}#22543d{% else %}#742a2a{% endif %}; padding: 4px 10px; border-radius: 4px; font-weight: 500; font-size: 0.9rem;">
+                                {{ log.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

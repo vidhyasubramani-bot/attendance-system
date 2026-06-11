@@ -1,0 +1,41 @@
+
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5" style="font-family: sans-serif;">
+    <div style="background: #1a202c; color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; text-align: center;">
+        <h2>Chief Administrator Control Panel</h2>
+        <p style="color: #a0aec0; margin: 0;">Welcome back! Manage institutional logs and student records.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">
+        <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #3182ce; text-align: center;">
+            <h4 style="color: #718096; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85rem; font-weight: bold;">Total Enrolled Students</h4>
+            <h1 style="color: #2d3748; margin: 0;">{{ total_students }}</h1>
+        </div>
+        <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid #38a169; text-align: center;">
+            <h4 style="color: #718096; margin-bottom: 10px; text-transform: uppercase; font-size: 0.85rem; font-weight: bold;">Total Attendance Logs</h4>
+            <h1 style="color: #2d3748; margin: 0;">{{ total_attendance }}</h1>
+        </div>
+    </div>
+
+    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;">
+        <h3 style="color: #2d3748; margin-bottom: 20px;">Control Gates</h3>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('students') }}" style="background: #3182ce; color: white; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                <i class="fas fa-users"></i> Manage Students List
+            </a>
+            
+            <a href="{{ url_for('reports') }}" style="background: #4a5568; color: white; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                <i class="fas fa-file-alt"></i> View Global Reports
+            </a>
+            
+            <a href="{{ url_for('logout') }}" style="background: #e53e3e; color: white; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                <i class="fas fa-sign-out-alt"></i> Secure Logout
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <style>
+        /* Global Base Standard CSS Hacks */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc;
+        }
+        .global-navbar {
+            background: #1a202c; /* Solid Premium Dark Tone */
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .global-navbar .logo-brand a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .global-navbar .nav-links-wrapper {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+        .global-navbar .nav-links-wrapper a {
+            color: #cbd5e0;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+        .global-navbar .nav-links-wrapper a:hover {
+            color: #ffffff;
+        }
+        /* STANDOUT CONTROL: High Contrast Blueprint Layer for Teacher Portal */
+        .teacher-portal-btn {
+            background: #3182ce !important; /* Premium Blue Block */
+            color: #ffffff !important; /* Crystal White Visibility */
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+            border: 1px solid #4299e1;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(49, 130, 206, 0.2);
+            transition: all 0.2s ease-in-out !important;
+        }
+        .teacher-portal-btn:hover {
+            background: #2b6cb0 !important;
+            transform: translateY(-1px);
+        }
+        .register-global-btn {
+            background: #4a5568;
+            color: #ffffff !important;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+        }
+        .register-global-btn:hover {
+            background: #2d3748;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="global-navbar">
+        <div class="logo-brand">
+            <a href="/"><i class="fas fa-graduation-cap me-2"></i>Smart Attendance System</a>
+        </div>
+        <div class="nav-links-wrapper">
+            <a href="/">Home</a>
+            <a href="{{ url_for('about') }}">About</a>
+            <a href="{{ url_for('contact') }}">Contact</a>
+            
+            <a href="{{ url_for('teacher_login') }}" class="teacher-portal-btn">
+                <i class="fas fa-chalkboard-teacher"></i> Teacher Portal
+            </a>
+            
+            <a href="{{ url_for('register') }}" class="register-global-btn">Register</a>
+        </div>
+    </nav>
+
+    <main class="main-content-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

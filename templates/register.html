@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-navbar">
+    <div class="logo"><strong>Smart Attendance System</strong></div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="{{ url_for('about') }}">About</a>
+        <a href="{{ url_for('contact') }}">Contact</a>
+        <a href="{{ url_for('login') }}" class="register-btn">Login</a>
+    </div>
+</div>
+
+<div class="login-container" style="min-height: 90vh; padding: 40px 20px;">
+    <div class="login-card" style="width: 1000px; max-width: 100%; flex-direction: column;">
+        
+        <div style="background-color: var(--primary-blue); color: white; padding: 25px 40px; border-bottom: 3px solid #004494;">
+            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 600;"><i class="fas fa-user-plus"></i> Student Registration</h2>
+            <p style="margin: 5px 0 0 0; color: #cbd5e1; font-size: 0.9rem;">Fill in the details accurately to create your institutional student profile account</p>
+        </div>
+
+        <div class="login-right" style="padding: 40px;">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                  <p style="color: #ef4444; background-color: #fff5f5; padding: 12px; border-radius: 6px; border: 1px solid #fee2e2; margin-bottom: 20px; font-size: 0.95rem;">
+                     <i class="fas fa-exclamation-circle"></i> {{ message }}
+                  </p>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('register') }}" method="POST" enctype="multipart/form-data">
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display:block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #4a5568;">Full Name</label>
+                        <i class="fas fa-user" style="top: 41px;"></i>
+                        <input type="text" name="name" placeholder="Enter Full Name" required style="padding-top:12px; padding-bottom:12px;">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display:block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #4a5568;">Register Number</label>
+                        <i class="fas fa-id-card" style="top: 41px;"></i>
+                        <input type="text" name="register_number" placeholder="Enter Register Number" required style="padding-top:12px; padding-bottom:12px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display:block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #4a5568;">Department</label>
+                        <i class="fas fa-graduation-cap" style="top: 41px; z-index: 2;"></i>
+                        <select name="department" style="width: 100%; padding: 12px 12px 12px 45px; border: 1px solid #ccd4e0; border-radius: 6px; font-size: 1rem; outline: none; background: white; appearance: none; cursor:pointer;">
+                            <option value="CSE">CSE (Computer Science)</option>
+                            <option value="IT">IT (Information Technology)</option>
+                            <option value="ECE">ECE (Electronics & Comm)</option>
+                            <option value="EEE">EEE (Electrical & Electronics)</option>
+                            <option value="MECH">MECH (Mechanical Eng)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display:block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #4a5568;">Academic Year</label>
+                        <i class="fas fa-calendar-alt" style="top: 41px; z-index: 2;"></i>
+                        <select name="year" style="width: 100%; padding: 12px 12px 12px 45px; border: 1px solid #ccd4e0; border-radius: 6px; font-size: 1rem; outline: none; background: white; appearance: none; cursor:pointer;">
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display:block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #4a5568;">Email Address</label>
+                        <i class="fas fa-envelope" style="top: 41px;"></i>
+                        <input type="email" name="email" placeholder="student@college.edu" required style="padding-top:12px; padding-bottom:12px;">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display:block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #4a5568;">Phone Number</label>
+                        <i class="fas fa-phone" style="top: 41px;"></i>
+                        <input type="tel" name="phone" placeholder="Enter Mobile Number" required style="padding-top:12px; padding-bottom:12px;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 25px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display:block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #4a5568;">Password</label>
+                        <i class="fas fa-lock" style="top: 41px;"></i>
+                        <input type="password" name="password" placeholder="Create Strong Password" required style="padding-top:12px; padding-bottom:12px;">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="display:block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #4a5568;">Confirm Password</label>
+                        <i class="fas fa-shield-alt" style="top: 41px;"></i>
+                        <input type="password" name="confirm_password" placeholder="Retype Created Password" required style="padding-top:12px; padding-bottom:12px;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 35px;">
+                    <label style="display:block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #4a5568;">Profile Photo (Optional)</label>
+                    <i class="fas fa-camera" style="top: 41px;"></i>
+                    <input type="file" name="photo" style="padding: 10px 12px 10px 45px;">
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 25px;">
+                    <p style="margin: 0; font-size: 0.95rem; color: #718096;">Already registered? <a href="{{ url_for('login') }}" style="color: var(--primary-blue); text-decoration: none; font-weight: 600;">Sign In here</a></p>
+                    <button type="submit" class="btn-login" style="width: auto; padding: 12px 40px; margin: 0; box-shadow: 0 4px 6px rgba(0, 86, 179, 0.25);">Create Account</button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

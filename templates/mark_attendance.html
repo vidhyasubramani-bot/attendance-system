@@ -1,0 +1,30 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div style="display: flex; min-height: 100vh;">
+    <div style="width: 260px; background-color: #1a202c; color: white; padding-top: 30px;">
+        <h3 style="text-align: center; margin-bottom: 30px; color: #63b3ed;">Smart Attendance</h3>
+        <p style="padding: 10px 25px; margin: 0;"><a href="{{ url_for('dashboard') }}" style="color: #cbd5e1; text-decoration: none; display: block;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a></p>
+    </div>
+    
+    <div style="flex: 1; padding: 40px; background-color: #f7fafc;">
+        <h2 style="color: #2d3748; margin-bottom: 25px;"><i class="fas fa-user-check" style="color: #3182ce;"></i> Live Verification Terminal</h2>
+        
+        <div style="background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); max-width: 600px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <i class="fas fa-fingerprint" style="font-size: 4rem; color: #4299e1; margin-bottom: 15px;"></i>
+                <h4 style="margin: 0; color: #2d3748; font-size: 1.3rem;">Instant Digital Check-In</h4>
+                <p style="color: #718096; margin-top: 5px; font-size: 0.95rem;">Stamps your secure daily institutional presence logs to the server</p>
+            </div>
+
+            <form action="{{ url_for('mark_attendance') }}" method="POST" style="text-align: center;">
+                <button type="submit" style="background-color: #48bb78; color: white; border: none; padding: 15px 40px; border-radius: 6px; font-size: 1.1rem; font-weight: 600; cursor: pointer; width: 100%; box-shadow: 0 4px 12px rgba(72,187,120,0.3); transition: all 0.2s ease;">
+                    <i class="fas fa-clock" style="margin-right: 8px;"></i> Check-In Attendance Today
+                </button>
+            </form>
+            
+            <p style="color: #a0aec0; font-size: 0.8rem; text-align: center; margin-top: 15px;"><i class="fas fa-shield-alt"></i> Secure encrypted transaction bound to register identity session.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

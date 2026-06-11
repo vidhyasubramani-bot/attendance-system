@@ -1,0 +1,97 @@
+
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5" style="font-family: sans-serif;">
+    
+    <div style="background: #1a202c; color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <span style="background: #3182ce; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Student Portal</span>
+            <h2 style="margin: 10px 0 5px 0; font-weight: 600;">Welcome back, {{ student.name }}!</h2>
+            <p style="color: #a0aec0; margin: 0; font-size: 0.95rem;">Track your daily institutional attendance log and profile sync status.</p>
+        </div>
+        <div style="background: #2d3748; padding: 15px 25px; border-radius: 8px; border-left: 4px solid #3182ce; text-align: left;">
+            <div style="font-size: 0.85rem; color: #a0aec0; text-transform: uppercase; font-weight: bold;">Department & Year</div>
+            <div style="font-size: 1.1rem; font-weight: 600; color: #fff; margin-top: 2px;">{{ student.department }}</div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 25px; flex-wrap: wrap;">
+        
+        <div style="flex: 1; min-width: 300px; max-width: 350px;">
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <h3 style="margin-top: 0; color: #2d3748; font-size: 1.1rem; border-bottom: 2px solid #edf2f7; padding-bottom: 10px; font-weight: 600;">
+                    <i class="fas fa-user-circle" style="color: #4a5568; margin-right: 8px;"></i>Core Profile Details
+                </h3>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 0.8rem; color: #718096; font-weight: bold; text-transform: uppercase;">Student ID / Reg No</label>
+                    <p style="margin: 3px 0 0 0; font-weight: 600; color: #2b6cb0;">#{{ student.id }}</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="font-size: 0.8rem; color: #718096; font-weight: bold; text-transform: uppercase;">Email Address</label>
+                    <p style="margin: 3px 0 0 0; color: #2d3748; font-size: 0.95rem; word-break: break-all;">{{ student.email }}</p>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="font-size: 0.8rem; color: #718096; font-weight: bold; text-transform: uppercase;">Phone Verified Connection</label>
+                    <p style="margin: 3px 0 0 0; color: #2d3748; font-size: 0.95rem;">{{ student.phone or 'Not Provided' }}</p>
+                </div>
+
+                <a href="{{ url_for('logout') }}" style="background: #fff; color: #e53e3e; border: 1px solid #e53e3e; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.9rem; display: block; text-align: center; transition: all 0.2s;">
+                    <i class="fas fa-sign-out-alt"></i> Secure Logout
+                </a>
+            </div>
+        </div>
+
+        <div style="flex: 2; min-width: 350px;">
+            <div style="background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; overflow: hidden;">
+                <div style="background: #edf2f7; padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: #2d3748; font-size: 1.1rem; font-weight: 600;">
+                        <i class="fas fa-calendar-check" style="color: #3182ce; margin-right: 8px;"></i>Your Attendance History Logs
+                    </h3>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="background: #f7fafc; border-bottom: 2px solid #edf2f7; color: #4a5568; font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">
+                            <th style="padding: 15px 20px;">Sl.No</th>
+                            <th style="padding: 15px 20px;">Date Stamp</th>
+                            <th style="padding: 15px 20px; text-align: center;">Status Gateway</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in attendance_list %}
+                        <tr style="border-bottom: 1px solid #edf2f7; color: #4a5568;">
+                            <td style="padding: 15px 20px; font-weight: bold; color: #718096;">{{ loop.index }}</td>
+                            <td style="padding: 15px 20px; font-weight: 600;">{{ log.date }}</td>
+                            <td style="padding: 15px 20px; text-align: center;">
+                                {% if log.status == 'Present' %}
+                                <span style="background: #c6f6d5; color: #22543d; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block;">
+                                    ● Present
+                                </span>
+                                {% else %}
+                                <span style="background: #fed7d7; color: #742a2a; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block;">
+                                    ● Absent
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" style="padding: 50px; text-align: center; color: #a0aec0; font-size: 1rem;">
+                                <i class="fas fa-clipboard-list fa-2x mb-3" style="display: block; color: #cbd5e0;"></i>
+                                No attendance records have been registered for your profile yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

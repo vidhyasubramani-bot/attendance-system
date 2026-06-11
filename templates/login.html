@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="text-align: center; margin-top: 35px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+    <p style="color: #718096; font-size: 0.9rem; margin-bottom: 10px;">Are you a Faculty Member?</p>
+    <a href="{{ url_for('teacher_login') }}" style="background-color: #ebf8ff; color: #2b6cb0; padding: 8px 20px; border-radius: 20px; text-decoration: none; font-weight: 600; font-size: 0.85rem; display: inline-block; transition: all 0.2s;">
+        <i class="fas fa-chalkboard-teacher"></i> Go to Teacher Desk
+    </a>
+</div>
+
+<div class="login-container" style="margin-top: 20px;">
+    <div class="login-card">
+        <div class="login-left">
+            <img src="https://img.freepik.com/free-vector/secure-login-concept-illustration_114360-4587.jpg" alt="Login Vector UI">
+        </div>
+        
+        <div class="login-right">
+            <h2>Student Login</h2>
+            <p style="color: #666; margin-bottom: 25px;">Enter your credentials to access your account</p>
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div style="color: #c53030; background-color: #fff5f5; border: 1px solid #fed7d7; padding: 12px; border-radius: 6px; text-align: left; margin-bottom: 15px; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <i class="fas fa-exclamation-circle"></i> {{ message }}
+                            </div>
+                            <span onclick="this.parentElement.style.display='none';" style="cursor: pointer; font-weight: bold; font-size: 1.2rem; color: #c53030; padding: 0 5px;">&times;</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="form-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="register_number" placeholder="Register Number" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+                
+                <button type="submit" class="btn-login">Login</button>
+            </form>
+            
+            <div style="text-align: center; margin-top: 25px; font-size: 0.9rem;">
+                <p style="color: #aaa; margin-bottom: 10px;">OR</p>
+                <p style="margin-bottom: 15px;">Don't have an account? <a href="{{ url_for('register') }}" style="color: var(--primary-blue); text-decoration: none; font-weight: 500;">Register here</a></p>
+                
+                <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 15px 0;">
+                
+                <p style="color: #718096; font-size: 0.85rem; margin-bottom: 5px;">Institutional Authority Control?</p>
+                <a href="{{ url_for('admin_login') }}" style="color: #4a5568; text-decoration: none; font-weight: 600; font-size: 0.85rem; background: #f7fafc; padding: 6px 15px; border-radius: 15px; border: 1px solid #e2e8f0; display: inline-block;">
+                    <i class="fas fa-user-shield"></i> Access Admin Gateway
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

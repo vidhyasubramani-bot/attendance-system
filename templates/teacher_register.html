@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="login-navbar">
+    <div class="logo"><strong>Smart Attendance System | Faculty Desk</strong></div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="{{ url_for('teacher_login') }}" class="register-btn">Teacher Login</a>
+    </div>
+</div>
+
+<div class="login-container" style="padding: 40px 20px; min-height: 90vh;">
+    <div class="login-card" style="max-width: 550px; padding: 40px; margin: 0 auto; flex-direction: column;">
+        <div style="width: 100%;">
+            <h2 style="color: #2b6cb0; text-align: center; margin-bottom: 5px;">
+                <i class="fas fa-user-plus"></i> Faculty Registration
+            </h2>
+            <p style="text-align: center; color: #718096; margin-bottom: 30px; font-size: 0.95rem;">
+                Create your official teacher account to manage departmental roll sheets.
+            </p>
+            
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                  <div style="color: #left; background-color: #fff5f5; border: 1px solid #fed7d7; color: #c53030; padding: 12px; border-radius: 6px; text-align: center; margin-bottom: 20px; font-size: 0.9rem;">
+                      <i class="fas fa-exclamation-circle"></i> {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('teacher_register') }}" method="POST">
+                <div style="margin-bottom: 18px; position: relative;">
+                    <i class="fas fa-user" style="position: absolute; left: 15px; top: 15px; color: #a0aec0;"></i>
+                    <input type="text" name="name" placeholder="Full Name (with Initial)" required 
+                           style="width: 100%; padding: 12px 12px 12px 45px; border-radius: 6px; border: 1px solid #ccd4e0; outline: none; font-size: 0.95rem;">
+                </div>
+
+                <div style="margin-bottom: 18px; position: relative;">
+                    <i class="fas fa-id-badge" style="position: absolute; left: 15px; top: 15px; color: #a0aec0;"></i>
+                    <input type="text" name="employee_id" placeholder="Faculty Employee ID (e.g., T101)" required 
+                           style="width: 100%; padding: 12px 12px 12px 45px; border-radius: 6px; border: 1px solid #ccd4e0; outline: none; font-size: 0.95rem;">
+                </div>
+
+                <div style="margin-bottom: 18px; position: relative;">
+                    <i class="fas fa-graduation-cap" style="position: absolute; left: 15px; top: 15px; color: #a0aec0; z-index: 10;"></i>
+                    <select name="department" required 
+                            style="width: 100%; padding: 12px 12px 12px 45px; border-radius: 6px; border: 1px solid #ccd4e0; outline: none; font-size: 0.95rem; background: white; appearance: none; cursor: pointer;">
+                        <option value="" disabled selected>Select Department</option>
+                        <option value="CSE">Computer Science & Engineering (CSE)</option>
+                        <option value="ECE">Electronics & Communication (ECE)</option>
+                        <option value="EEE">Electrical & Electronics (EEE)</option>
+                        <option value="MECH">Mechanical Engineering (MECH)</option>
+                        <option value="CIVIL">Civil Engineering (CIVIL)</option>
+                    </select>
+                    <i class="fas fa-chevron-down" style="position: absolute; right: 15px; top: 18px; color: #a0aec0; pointer-events: none;"></i>
+                </div>
+
+                <div style="margin-bottom: 18px; position: relative;">
+                    <i class="fas fa-envelope" style="position: absolute; left: 15px; top: 15px; color: #a0aec0;"></i>
+                    <input type="email" name="email" placeholder="Official Email Address" required 
+                           style="width: 100%; padding: 12px 12px 12px 45px; border-radius: 6px; border: 1px solid #ccd4e0; outline: none; font-size: 0.95rem;">
+                </div>
+
+                <div style="margin-bottom: 25px; position: relative;">
+                    <i class="fas fa-lock" style="position: absolute; left: 15px; top: 15px; color: #a0aec0;"></i>
+                    <input type="password" name="password" placeholder="Create Strong Password" required 
+                           style="width: 100%; padding: 12px 12px 12px 45px; border-radius: 6px; border: 1px solid #ccd4e0; outline: none; font-size: 0.95rem;">
+                </div>
+
+                <button type="submit" style="background-color: #2b6cb0; color: white; border: none; padding: 14px; border-radius: 6px; width: 100%; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; box-shadow: 0 4px 6px rgba(43,108,176,0.2);">
+                    <i class="fas fa-user-check"></i> Complete Registration
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #718096;">
+                Already have a faculty account? <a href="{{ url_for('teacher_login') }}" style="color: #2b6cb0; text-decoration: none; font-weight: 600;">Log In here</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
