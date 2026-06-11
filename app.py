@@ -631,5 +631,7 @@ def teacher_submit_attendance():
     flash("Bulk Class Attendance Manifested Successfully for Today!")
     return redirect(url_for("teacher_dashboard"))
 
+import os
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
