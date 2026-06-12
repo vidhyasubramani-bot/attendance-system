@@ -1,59 +1,76 @@
-
-import pymysql
-from flask import Flask, render_template, request, redirect, session, url_for, flash, send_file, jsonify
+import os
 from datetime import date
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from flask import Flask, render_template, request, redirect, session, url_for, flash, send_file, jsonify
 import pandas as pd
+from  sqlalchemy import create_engine  # Excel Export-க்காக சேர்க்கப்பட்டுள்ளது
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
-import os
 
-# --- FIXED: Added DictCursor as default connection mapping ---
-# --- SARIYAANA DATABASE CONNECTION CONFIG ---
+# --- SARIYAANA POSTGRESQL DATABASE CONNECTION CONFIG ---
 def get_connection():
-    return pymysql.connect(
-        host="your-planetscale-host",
-        user="root",
-        password="Vidhya@2007",
-        database="attendance",  # <-- 'attendance_db'க்கு பதிலா 'attendance'னு மாத்துங்க!
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
-    )
-    
+    try:
+        # Vercel-ல் உள்ள DATABASE_URL-ஐ எடுக்கும், லோக்கலில் டெஸ்ட் செய்ய fallback லிங்க் பயன்படுத்தும்.
+        DATABASE_URL = os.environ.get(
+            "DATABASE_URL", 
+            "postgresql://postgres:password@localhost:5432/attendance_db"
+        )
+        # RealDictCursor பயன்படுத்துவதால் HTML கோடுகளில் எந்த மாற்றமும் தேவையில்லை!
+        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    except Exception as e:
+        print("PostgreSQL Connection Failed:", e)
+        return None
 
 app = Flask(__name__)
-app.secret_key = "smart_attendance_secret"
+app.secret_key = os.environ.get("SECRET_KEY", "smart_attendance_secret")
 
+app.debug = os.environ.get("FLASK_ENV") == "development"
+
+# --- Percentage Calculation Logic ---
 def calculate_percentage(student_id):
     conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT COUNT(*) FROM attendance WHERE student_id=%s", (student_id,))
-    total = cursor.fetchone()
-    total_val = total["COUNT(*)"] if isinstance(total, dict) else total[0]
-
-    cursor.execute("SELECT COUNT(*) FROM attendance WHERE student_id=%s AND status='Present'", (student_id,))
-    present = cursor.fetchone()
-    present_val = present["COUNT(*)"] if isinstance(present, dict) else present[0]
-
-    conn.close()
-    if total_val == 0:
+    if conn is None:
         return 0
 
-    return round((present_val / total_val) * 100, 2)
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) as total FROM attendance WHERE student_id=%s", (student_id,))
+        total = cursor.fetchone()
+        total_val = total["total"] if total else 0
+
+        cursor.execute("SELECT COUNT(*) as present FROM attendance WHERE student_id=%s AND status='Present'", (student_id,))
+        present = cursor.fetchone()
+        present_val = present["present"] if present else 0
+        
+        if total_val == 0:
+            return 0
+
+        return round((present_val / total_val) * 100, 2)
+    except Exception as e:
+        print("Error calculating percentage:", e)
+        return 0
+    finally:
+        cursor.close()
+        conn.close()
 
 
 # ==========================================================
-# 📡 NEW FEATURE: CORE API INTEGRATION PIPELINES (JSON DATA)
+# 📡 CORE API INTEGRATION PIPELINES (JSON DATA)
 # ==========================================================
 
 # 1. API to Fetch All Students
 @app.route("/api/students", methods=["GET"])
 def api_get_students():
     conn = get_connection()
+    if conn is None:
+        return jsonify({"status": "error", "message": "Database Connection Failed"}), 500
+    
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, register_number, department, year, email, phone FROM students")
     data = cursor.fetchall()
+    cursor.close()
     conn.close()
     return jsonify({"status": "success", "total_records": len(data), "data": data})
 
@@ -61,6 +78,9 @@ def api_get_students():
 @app.route("/api/attendance_logs", methods=["GET"])
 def api_get_attendance():
     conn = get_connection()
+    if conn is None:
+        return jsonify({"status": "error", "message": "Database Connection Failed"}), 500
+        
     cursor = conn.cursor()
     cursor.execute("""
         SELECT attendance.id, students.name, students.register_number, attendance.date, attendance.status 
@@ -68,9 +88,9 @@ def api_get_attendance():
         JOIN students ON attendance.student_id = students.id
     """)
     data = cursor.fetchall()
+    cursor.close()
     conn.close()
     
-    # Python date objects cannot be serialized directly to JSON, string-ah convert panrom
     for row in data:
         if 'date' in row and row['date']:
             row['date'] = str(row['date'])
@@ -102,9 +122,14 @@ def login():
         password = request.form["password"]
 
         conn = get_connection()
+        if conn is None:
+            flash("Database Connection Failed!")
+            return redirect(url_for("login"))
+            
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM students WHERE register_number=%s AND password=%s", (register_number, password))
         student = cursor.fetchone()
+        cursor.close()
         conn.close()
 
         if student:
@@ -132,6 +157,10 @@ def dashboard():
 
     student_id = session.get("student_id")
     conn = get_connection()
+    if conn is None:
+        flash("Database connection failed!")
+        return redirect(url_for("login"))
+        
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) as count FROM students")
@@ -155,7 +184,9 @@ def dashboard():
     for row in attendance_records:
         row['date'] = str(row['date'])
 
+    cursor.close()
     conn.close()
+    
     attendance_percentage = f"{calculate_percentage(student_id)}%"
 
     return render_template(
@@ -185,12 +216,14 @@ def mark_attendance():
         already_marked = cursor.fetchone()
         
         if already_marked:
+            cursor.close()
             conn.close()
             flash("Attendance already marked for today!")
             return redirect(url_for("dashboard"))
             
         cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES (%s, %s, 'Present')", (student_id, today))
         conn.commit()
+        cursor.close()
         conn.close()
         
         flash("Attendance Marked Successfully for Today!")
@@ -216,6 +249,7 @@ def my_attendance():
         ORDER BY date DESC
     """, (student_id,))
     history = cursor.fetchall()
+    cursor.close()
     conn.close()
     
     return render_template("my_attendance.html", history=history)
@@ -244,7 +278,7 @@ def logout():
     flash("You have been logged out successfully.")
     return redirect(url_for("login"))
 
-# --- FIXED ADMIN LOGIN CONTROL SYSTEM ---
+# --- ADMIN LOGIN CONTROL SYSTEM ---
 @app.route("/admin_login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -262,7 +296,6 @@ def admin_login():
     return render_template("admin_login.html")
 
 # --- ADMIN DASHBOARD ---
-# --- ADMIN DASHBOARD (FIXED KEYERROR) ---
 @app.route("/admin_dashboard")
 def admin_dashboard():
     if "admin" not in session:
@@ -271,15 +304,13 @@ def admin_dashboard():
     conn = get_connection()
     cursor = conn.cursor()
     
-    # 1. 'as total_students' என்று மாற்றுவதால் Key பெயர் 'total_students' என்று தெளிவாகும்
     cursor.execute("SELECT COUNT(*) as total_students FROM students")
     students_result = cursor.fetchone()
-    ts_val = students_result["total_students"] if isinstance(students_result, dict) else students_result[0]
+    ts_val = students_result["total_students"] if students_result else 0
 
-    # 2. 'as total_att' என்று மாற்றுவதால் Key பெயர் 'total_att' என்று தெளிவாகும்
     cursor.execute("SELECT COUNT(*) as total_att FROM attendance")
     attendance_result = cursor.fetchone()
-    ta_val = attendance_result["total_att"] if isinstance(attendance_result, dict) else attendance_result[0]
+    ta_val = attendance_result["total_att"] if attendance_result else 0
     
     cursor.close()
     conn.close()
@@ -289,6 +320,7 @@ def admin_dashboard():
         total_students=ts_val,
         total_attendance=ta_val
     )
+
 # --- ADMIN BLOCK: EXCEL & PDF REPORTS GENERATOR ---
 @app.route("/download_pdf")
 def download_pdf():
@@ -304,9 +336,10 @@ def download_pdf():
         ORDER BY attendance.date DESC
     """)
     data = cursor.fetchall()
+    cursor.close()
     conn.close()
 
-    file_path = "attendance_report.pdf"
+    file_path = "/tmp/attendance_report.pdf"  
     pdf = SimpleDocTemplate(file_path, pagesize=letter)
     table_data = [["Student ID", "Name", "Date", "Status"]]
 
@@ -328,16 +361,18 @@ def download_pdf():
 
 @app.route("/export_excel")
 def export_excel():
-    conn = get_connection()
+    # PostgreSQL-ல் pandas sql இன்டகிரேஷனுக்கு SQLAlchemy அத்தியாவசியம்
+    db_url = os.environ.get("DATABASE_URL", "postgresql://postgres:password@localhost:5432/attendance_db")
+    engine = create_engine(db_url)
+    
     query = """
     SELECT students.name, students.register_number, attendance.date, attendance.status
     FROM attendance
     JOIN students ON students.id = attendance.student_id
     """
-    df = pd.read_sql(query, conn)
-    file_name = "attendance_report.xlsx"
+    df = pd.read_sql(query, engine)
+    file_name = "/tmp/attendance_report.xlsx"  
     df.to_excel(file_name, index=False)
-    conn.close()
 
     return send_file(file_name, as_attachment=True)
 
@@ -350,9 +385,11 @@ def attendance():
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, register_number FROM students")
     students_list = cursor.fetchall()
+    cursor.close()
     conn.close()
 
     return render_template("attendance.html", students=students_list)
+
 @app.route("/students")
 def students():
     if "admin" not in session:
@@ -363,18 +400,18 @@ def students():
     cursor = conn.cursor()
 
     if search_query:
-        query = "SELECT * FROM students WHERE name LIKE %s OR email LIKE %s"
+        # PostgreSQL-ல் 'ILIKE' பயன்படுத்தி அசால்ட்டாக தேடலாம்
+        query = "SELECT * FROM students WHERE name ILIKE %s OR email ILIKE %s"
         cursor.execute(query, (f"%{search_query}%", f"%{search_query}%"))
     else:
-        cursor.execute("SELECT * FROM students")
+        cursor.execute("SELECT * FROM students ORDER BY id ASC")
     
     students_data = cursor.fetchall()
     cursor.close()
     conn.close()
 
-    # இங்கதான் ட்ரிக் இருக்கு! 'students' என்ற பெயரிலேயே 
-    # டேட்டாவை HTML-க்கு அப்படியே பாஸ் பண்றோம்.
     return render_template("students.html", students=students_data, search_query=search_query)
+
 @app.route("/student_dashboard")
 def student_dashboard():
     if "student_id" not in session and "user_id" not in session:
@@ -385,11 +422,9 @@ def student_dashboard():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # 1. மாணவர் விபரங்களை எடுக்கிறோம்
     cursor.execute("SELECT * FROM students WHERE id = %s", (student_id,))
     current_student = cursor.fetchone()
 
-    # 2. அட்டெண்டன்ஸ் விபரங்களை எடுக்கிறோம்
     cursor.execute("SELECT * FROM attendance WHERE student_id = %s ORDER BY date DESC", (student_id,))
     attendance_history = cursor.fetchall()
 
@@ -400,19 +435,6 @@ def student_dashboard():
         session.clear()
         return redirect(url_for("login"))
 
-    # 🔥 [SAFETY TRICK]: தரவு Tuple-ஆக இருந்தால், அதை நாம் கைமுறையாக Dictionary-ஆக மாற்றுகிறோம்
-    if isinstance(current_student, (tuple, list)):
-        # உங்க டேபிள் ஸ்ட்ரக்சர் படி: id, name, email, phone, department, year, password...
-        # ஒருவேளை ஆர்டர் மாறினால், உங்க டேட்டாபேஸ் ஆர்டருக்கு ஏற்ப மாற்றி அமைத்துக் கொள்ளவும்
-        current_student = {
-            "id": current_student[0],
-            "name": current_student[1],
-            "email": current_student[2],
-            "phone": current_student[3] if len(current_student) > 3 else "N/A",
-            "department": current_student[4] if len(current_student) > 4 else "N/A"
-        }
-
-    # இப்போது HTML-க்கு அனுப்புகிறோம்
     return render_template(
         "student_dashboard.html", 
         student=current_student, 
@@ -426,6 +448,7 @@ def delete_student(id):
     cursor.execute("DELETE FROM attendance WHERE student_id=%s", (id,))
     cursor.execute("DELETE FROM students WHERE id=%s", (id,))
     conn.commit()
+    cursor.close()
     conn.close()
 
     return redirect(url_for("students"))
@@ -437,6 +460,7 @@ def present(id):
     cursor = conn.cursor()
     cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES(%s,%s,%s)", (id, today, "Present"))
     conn.commit()
+    cursor.close()
     conn.close()
 
     return redirect(url_for("attendance"))
@@ -451,11 +475,13 @@ def edit_student(id):
         email = request.form["email"]
         cursor.execute("UPDATE students SET name=%s, email=%s WHERE id=%s", (name, email, id))
         conn.commit()
+        cursor.close()
         conn.close()
         return redirect(url_for("students"))
 
     cursor.execute("SELECT * FROM students WHERE id=%s", (id,))
     student = cursor.fetchone()
+    cursor.close()
     conn.close()
 
     return render_template("edit_student.html", student=student)
@@ -474,6 +500,7 @@ def reports():
         ORDER BY attendance.date DESC
     """)
     reports_list = cursor.fetchall()
+    cursor.close()
     conn.close()
 
     return render_template("reports.html", reports=reports_list)   
@@ -485,6 +512,7 @@ def absent(id):
     cursor = conn.cursor()
     cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES(%s,%s,%s)", (id, today, "Absent"))
     conn.commit()
+    cursor.close()
     conn.close()
 
     return redirect(url_for("attendance"))
@@ -512,6 +540,7 @@ def register():
         existing = cursor.fetchone()
 
         if existing:
+            cursor.close()
             conn.close()
             flash("Register Number Already Exists!")
             return redirect(url_for('register'))
@@ -521,6 +550,7 @@ def register():
             VALUES (%s,%s,%s,%s,%s,%s,%s)
         """, (name, reg_no, department, year, email, phone, password))
         conn.commit()
+        cursor.close()
         conn.close()
 
         flash("Registration Successful! Please Login.")
@@ -544,6 +574,7 @@ def teacher_register():
         existing = cursor.fetchone()
 
         if existing:
+            cursor.close()
             conn.close()
             flash("Employee ID Already Registered!")
             return redirect(url_for('teacher_register'))
@@ -553,6 +584,7 @@ def teacher_register():
             VALUES (%s,%s,%s,%s,%s)
         """, (name, emp_id, department, email, password))
         conn.commit()
+        cursor.close()
         conn.close()
 
         flash("Teacher Registration Successful! Please Login.")
@@ -571,6 +603,7 @@ def teacher_login():
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM teachers WHERE employee_id=%s AND password=%s", (emp_id, password))
         teacher = cursor.fetchone()
+        cursor.close()
         conn.close()
 
         if teacher:
@@ -595,6 +628,7 @@ def teacher_dashboard():
     
     cursor.execute("SELECT id, name, register_number, department FROM students WHERE department=%s", (session["teacher_dept"],))
     students_list = cursor.fetchall()
+    cursor.close()
     conn.close()
 
     return render_template("teacher_dashboard.html", students=students_list, date=date)
@@ -613,7 +647,7 @@ def teacher_submit_attendance():
     students_list = cursor.fetchall()
     
     for row in students_list:
-        student_id = row['id']  # Correct Dict Reference
+        student_id = row['id']
         status_key = f"status_{student_id}"
         status_value = request.form.get(status_key, "Absent") 
         
@@ -623,15 +657,14 @@ def teacher_submit_attendance():
         if exists:
             cursor.execute("UPDATE attendance SET status=%s WHERE student_id=%s AND date=%s", (status_value, student_id, today))
         else:
-            cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES (%s, %s, %s)", (status_value, student_id, today))
+            cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES (%s, %s, %s)", (student_id, today, status_value))
             
     conn.commit()
+    cursor.close()
     conn.close()
     
     flash("Bulk Class Attendance Manifested Successfully for Today!")
     return redirect(url_for("teacher_dashboard"))
-
-import os
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
