@@ -12,7 +12,7 @@ from reportlab.lib import colors
 # --- SARIYAANA POSTGRESQL DATABASE CONNECTION CONFIG ---
 def get_connection():
     try:
-        # Vercel-ல் உள்ள DATABASE_URL-ஐ எடுக்கும், லோக்கலில் டெஸ்ட் செய்ய fallback லிங்க் பயன்படுத்தும்.
+        # Vercel/Render-ல் உள்ள DATABASE_URL-ஐ எடுக்கும், லோக்கலில் டெஸ்ட் செய்ய fallback லிங்க் பயன்படுத்தும்.
         DATABASE_URL = os.environ.get(
             "DATABASE_URL", 
             "postgresql://postgres:password@localhost:5432/attendance_db"
@@ -24,8 +24,8 @@ def get_connection():
         return None
 
 app = Flask(__name__)
-# --- AUTOMATIC TABLE CREATOR FOR RENDER ---
-@app.before_all_requests
+
+# --- AUTOMATIC TABLE CREATOR FOR RENDER (CORRECTED PLACE) ---
 def create_tables_automatically():
     try:
         conn = get_connection()
@@ -70,8 +70,8 @@ def create_tables_automatically():
             print(">>> DATABASE TABLES VERIFIED/CREATED SUCCESSFULLY! <<<")
     except Exception as e:
         print("Error creating tables automatically:", e)
-app.secret_key = os.environ.get("SECRET_KEY", "smart_attendance_secret")
 
+app.secret_key = os.environ.get("SECRET_KEY", "smart_attendance_secret")
 app.debug = os.environ.get("FLASK_ENV") == "development"
 
 # --- Percentage Calculation Logic ---
@@ -407,7 +407,6 @@ def download_pdf():
 
 @app.route("/export_excel")
 def export_excel():
-    # PostgreSQL-ல் pandas sql இன்டகிரேஷனுக்கு SQLAlchemy அத்தியாவசியம்
     db_url = os.environ.get("DATABASE_URL", "postgresql://postgres:password@localhost:5432/attendance_db")
     engine = create_engine(db_url)
     
@@ -446,7 +445,6 @@ def students():
     cursor = conn.cursor()
 
     if search_query:
-        # PostgreSQL-ல் 'ILIKE' பயன்படுத்தி அசால்ட்டாக தேடலாம்
         query = "SELECT * FROM students WHERE name ILIKE %s OR email ILIKE %s"
         cursor.execute(query, (f"%{search_query}%", f"%{search_query}%"))
     else:
@@ -607,7 +605,7 @@ def register():
 # --- TEACHER REGISTRATION BACKEND ---
 @app.route("/teacher_register", methods=["GET", "POST"])
 def teacher_register():
-    if request.method == "POST":
+    if request.method =="POST":
         name = request.form["name"]
         emp_id = request.form["employee_id"]
         department = request.form["department"]
@@ -712,5 +710,7 @@ def teacher_submit_attendance():
     flash("Bulk Class Attendance Manifested Successfully for Today!")
     return redirect(url_for("teacher_dashboard"))
 
+# --- SAFELY START AND CREATE TABLES ---
 if __name__ == "__main__":
+    create_tables_automatically()  # ஆப் தொடங்கும்போதே டேபிள்களை பேக்-எண்டில் உருவாக்கும்!
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
