@@ -24,6 +24,52 @@ def get_connection():
         return None
 
 app = Flask(__name__)
+# --- AUTOMATIC TABLE CREATOR FOR RENDER ---
+@app.before_all_requests
+def create_tables_automatically():
+    try:
+        conn = get_connection()
+        if conn:
+            cur = conn.cursor()
+            # 1. Students Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS students (
+                    id SERIAL PRIMARY KEY, 
+                    name VARCHAR(100), 
+                    register_number VARCHAR(100) UNIQUE, 
+                    department VARCHAR(100), 
+                    year VARCHAR(20), 
+                    email VARCHAR(100), 
+                    phone VARCHAR(20), 
+                    password VARCHAR(255)
+                );
+            """)
+            # 2. Attendance Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS attendance (
+                    id SERIAL PRIMARY KEY, 
+                    student_id INT REFERENCES students(id) ON DELETE CASCADE, 
+                    date DATE, 
+                    status VARCHAR(20)
+                );
+            """)
+            # 3. Teachers Table
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS teachers (
+                    id SERIAL PRIMARY KEY, 
+                    name VARCHAR(100), 
+                    employee_id VARCHAR(50) UNIQUE, 
+                    department VARCHAR(50), 
+                    email VARCHAR(100) UNIQUE, 
+                    password VARCHAR(255)
+                );
+            """)
+            conn.commit()
+            cur.close()
+            conn.close()
+            print(">>> DATABASE TABLES VERIFIED/CREATED SUCCESSFULLY! <<<")
+    except Exception as e:
+        print("Error creating tables automatically:", e)
 app.secret_key = os.environ.get("SECRET_KEY", "smart_attendance_secret")
 
 app.debug = os.environ.get("FLASK_ENV") == "development"
