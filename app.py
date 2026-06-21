@@ -9,15 +9,29 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 
-# --- SARIYAANA POSTGRESQL DATABASE CONNECTION CONFIG ---
-# --- SARIYAANA POSTGRESQL DATABASE CONNECTION CONFIG ---
 def get_connection():
     try:
-        DATABASE_URL = os.environ.get(
-            "DATABASE_URL",
-            "postgresql://postgres:password@localhost:5432/attendance_db"
+        DATABASE_URL = os.environ.get("DATABASE_URL")
+
+        if not DATABASE_URL:
+            print("DATABASE_URL not found")
+            return None
+
+        # Render postgres:// ஐ postgresql:// ஆக மாற்றும்
+        if DATABASE_URL.startswith("postgres://"):
+            DATABASE_URL = DATABASE_URL.replace(
+                "postgres://",
+                "postgresql://",
+                1
+            )
+
+        conn = psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=RealDictCursor
         )
-        return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
+        return conn
+
     except Exception as e:
         print("PostgreSQL Connection Failed:", e)
         return None
