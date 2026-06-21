@@ -13,9 +13,20 @@ def get_connection():
     try:
         DATABASE_URL = os.environ.get("DATABASE_URL")
 
-        if not DATABASE_URL:
-            print("DATABASE_URL not found")
-            return None
+        print("DATABASE_URL =", DATABASE_URL)
+
+        conn = psycopg2.connect(
+            DATABASE_URL,
+            cursor_factory=RealDictCursor,
+            sslmode="require"
+        )
+
+        print("DB CONNECTED OK")
+        return conn
+
+    except Exception as e:
+        print("POSTGRES ERROR:", str(e))
+        return None
 
         # Render postgres:// ஐ postgresql:// ஆக மாற்றும்
         if DATABASE_URL.startswith("postgres://"):
@@ -172,7 +183,7 @@ def about():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
-conn = get_connection()
+ 
 
 
 # --- STUDENT LOGIN BACKEND ---
