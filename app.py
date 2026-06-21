@@ -172,6 +172,8 @@ def about():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
+conn = get_connection()
+
 
 # --- STUDENT LOGIN BACKEND ---
 @app.route("/login", methods=["GET", "POST"])
@@ -181,25 +183,32 @@ def login():
         password = request.form["password"]
 
         conn = get_connection()
+        print("LOGIN CONNECTION =", conn)
+
         if conn is None:
             flash("Database Connection Failed!")
             return redirect(url_for("login"))
-            
+
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM students WHERE register_number=%s AND password=%s", (register_number, password))
+        cursor.execute(
+            "SELECT * FROM students WHERE register_number=%s AND password=%s",
+            (register_number, password)
+        )
+
         student = cursor.fetchone()
+
         cursor.close()
         conn.close()
 
         if student:
             session["student"] = register_number
-            session["student_id"] = student["id"]  
+            session["student_id"] = student["id"]
             session["student_name"] = student["name"]
             session["student_dept"] = student.get("department", "CSE")
             session["student_year"] = student.get("year", "3rd Year")
             session["student_email"] = student.get("email", "student@college.edu")
             session["student_phone"] = student.get("phone", "+91 98765 43210")
-            
+
             flash("Login Successful!")
             return redirect(url_for("dashboard"))
         else:
