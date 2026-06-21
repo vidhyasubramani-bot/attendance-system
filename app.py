@@ -10,14 +10,13 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 
 # --- SARIYAANA POSTGRESQL DATABASE CONNECTION CONFIG ---
+# --- SARIYAANA POSTGRESQL DATABASE CONNECTION CONFIG ---
 def get_connection():
     try:
-        # Vercel/Render-ல் உள்ள DATABASE_URL-ஐ எடுக்கும், லோக்கலில் டெஸ்ட் செய்ய fallback லிங்க் பயன்படுத்தும்.
         DATABASE_URL = os.environ.get(
-            "DATABASE_URL", 
+            "DATABASE_URL",
             "postgresql://postgres:password@localhost:5432/attendance_db"
         )
-        # RealDictCursor பயன்படுத்துவதால் HTML கோடுகளில் எந்த மாற்றமும் தேவையில்லை!
         return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     except Exception as e:
         print("PostgreSQL Connection Failed:", e)
