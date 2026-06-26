@@ -4,52 +4,38 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask import Flask, render_template, request, redirect, session, url_for, flash, send_file, jsonify
 import pandas as pd
-from  sqlalchemy import create_engine  # Excel Export-க்காக சேர்க்கப்பட்டுள்ளது
+from sqlalchemy import create_engine  # Excel Export-க்காக சேர்க்கப்பட்டுள்ளது
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
 
 def get_connection():
+    DATABASE_URL = os.environ.get("DATABASE_URL")
+    if not DATABASE_URL:
+        print("DATABASE_URL environment variable is missing!")
+        return None
+
+    # Render / Heroku compatibility fix (Moved to the top where it can actually execute)
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
     try:
-        DATABASE_URL = os.environ.get("DATABASE_URL")
-
-        print("DATABASE_URL =", DATABASE_URL)
-
         conn = psycopg2.connect(
             DATABASE_URL,
             cursor_factory=RealDictCursor,
-            sslmode="require"
+            sslmode="require" if "localhost" not in DATABASE_URL else "prefer"
         )
-
         print("DB CONNECTED OK")
         return conn
-
     except Exception as e:
-        print("POSTGRES ERROR:", str(e))
-        return None
-
-        # Render postgres:// ஐ postgresql:// ஆக மாற்றும்
-        if DATABASE_URL.startswith("postgres://"):
-            DATABASE_URL = DATABASE_URL.replace(
-                "postgres://",
-                "postgresql://",
-                1
-            )
-
-        conn = psycopg2.connect(
-            DATABASE_URL,
-            cursor_factory=RealDictCursor
-        )
-
-        return conn
-
-    except Exception as e:
-        print("PostgreSQL Connection Failed:", e)
+        print("PostgreSQL Connection Failed:", str(e))
         return None
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "smart_attendance_secret")
+app.debug = os.environ.get("FLASK_ENV") == "development"
 
-# --- AUTOMATIC TABLE CREATOR FOR RENDER (CORRECTED PLACE) ---
+# --- AUTOMATIC TABLE CREATOR FOR RENDER ---
 def create_tables_automatically():
     try:
         conn = get_connection()
@@ -95,15 +81,13 @@ def create_tables_automatically():
     except Exception as e:
         print("Error creating tables automatically:", e)
 
-app.secret_key = os.environ.get("SECRET_KEY", "smart_attendance_secret")
-app.debug = os.environ.get("FLASK_ENV") == "development"
-
 # --- Percentage Calculation Logic ---
 def calculate_percentage(student_id):
     conn = get_connection()
     if conn is None:
         return 0
 
+    cursor = None
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) as total FROM attendance WHERE student_id=%s", (student_id,))
@@ -122,7 +106,8 @@ def calculate_percentage(student_id):
         print("Error calculating percentage:", e)
         return 0
     finally:
-        cursor.close()
+        if cursor:
+            cursor.close()
         conn.close()
 
 
@@ -130,7 +115,6 @@ def calculate_percentage(student_id):
 # 📡 CORE API INTEGRATION PIPELINES (JSON DATA)
 # ==========================================================
 
-# 1. API to Fetch All Students
 @app.route("/api/students", methods=["GET"])
 def api_get_students():
     conn = get_connection()
@@ -144,7 +128,6 @@ def api_get_students():
     conn.close()
     return jsonify({"status": "success", "total_records": len(data), "data": data})
 
-# 2. API to Fetch Attendance Logs
 @app.route("/api/attendance_logs", methods=["GET"])
 def api_get_attendance():
     conn = get_connection()
@@ -183,8 +166,6 @@ def about():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
- 
-
 
 # --- STUDENT LOGIN BACKEND ---
 @app.route("/login", methods=["GET", "POST"])
@@ -194,8 +175,6 @@ def login():
         password = request.form["password"]
 
         conn = get_connection()
-        print("LOGIN CONNECTION =", conn)
-
         if conn is None:
             flash("Database Connection Failed!")
             return redirect(url_for("login"))
@@ -205,9 +184,7 @@ def login():
             "SELECT * FROM students WHERE register_number=%s AND password=%s",
             (register_number, password)
         )
-
         student = cursor.fetchone()
-
         cursor.close()
         conn.close()
 
@@ -241,7 +218,6 @@ def dashboard():
         return redirect(url_for("login"))
         
     cursor = conn.cursor()
-
     cursor.execute("SELECT COUNT(*) as count FROM students")
     total_students = cursor.fetchone()["count"]
 
@@ -277,6 +253,41 @@ def dashboard():
         attendance_records=attendance_records
     )
 
+# --- ALTERNATIVE STUDENT DASHBOARD ROUTE ---
+@app.route("/student_dashboard")
+def student_dashboard():
+    student_id = session.get("student_id") or session.get("user_id")
+    if not student_id:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    if conn is None:
+        flash("Database connection failed!")
+        return redirect(url_for("login"))
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM students WHERE id = %s", (student_id,))
+    current_student = cursor.fetchone()
+
+    cursor.execute("SELECT * FROM attendance WHERE student_id = %s ORDER BY date DESC", (student_id,))
+    attendance_history = cursor.fetchall()
+
+    for row in attendance_history:
+        row['date'] = str(row['date'])
+
+    cursor.close()
+    conn.close()
+
+    if not current_student:
+        session.clear()
+        return redirect(url_for("login"))
+
+    return render_template(
+        "student_dashboard.html", 
+        student=current_student, 
+        attendance_list=attendance_history
+    )
+
 # --- STUDENT MARK ATTENDANCE ---
 @app.route("/mark_attendance", methods=["GET", "POST"])
 def mark_attendance():
@@ -290,7 +301,6 @@ def mark_attendance():
         
         conn = get_connection()
         cursor = conn.cursor()
-        
         cursor.execute("SELECT * FROM attendance WHERE student_id=%s AND date=%s", (student_id, today))
         already_marked = cursor.fetchone()
         
@@ -320,7 +330,6 @@ def my_attendance():
     student_id = session.get("student_id")
     conn = get_connection()
     cursor = conn.cursor()
-    
     cursor.execute("""
         SELECT date, 'Regular Class' as subject, status 
         FROM attendance 
@@ -382,7 +391,6 @@ def admin_dashboard():
 
     conn = get_connection()
     cursor = conn.cursor()
-    
     cursor.execute("SELECT COUNT(*) as total_students FROM students")
     students_result = cursor.fetchone()
     ts_val = students_result["total_students"] if students_result else 0
@@ -390,7 +398,6 @@ def admin_dashboard():
     cursor.execute("SELECT COUNT(*) as total_att FROM attendance")
     attendance_result = cursor.fetchone()
     ta_val = attendance_result["total_att"] if attendance_result else 0
-    
     cursor.close()
     conn.close()
 
@@ -441,8 +448,10 @@ def download_pdf():
 @app.route("/export_excel")
 def export_excel():
     db_url = os.environ.get("DATABASE_URL", "postgresql://postgres:password@localhost:5432/attendance_db")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
     engine = create_engine(db_url)
-    
     query = """
     SELECT students.name, students.register_number, attendance.date, attendance.status
     FROM attendance
@@ -456,7 +465,7 @@ def export_excel():
 
 @app.route("/attendance")
 def attendance():
-    if "student" not in session:
+    if "student" not in session and "admin" not in session and "teacher" not in session:
         return redirect(url_for("login"))
 
     conn = get_connection()
@@ -489,37 +498,11 @@ def students():
 
     return render_template("students.html", students=students_data, search_query=search_query)
 
-@app.route("/student_dashboard")
-def student_dashboard():
-    if "student_id" not in session and "user_id" not in session:
-        return redirect(url_for("login"))
-
-    student_id = session.get("student_id") or session.get("user_id")
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM students WHERE id = %s", (student_id,))
-    current_student = cursor.fetchone()
-
-    cursor.execute("SELECT * FROM attendance WHERE student_id = %s ORDER BY date DESC", (student_id,))
-    attendance_history = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    if not current_student:
-        session.clear()
-        return redirect(url_for("login"))
-
-    return render_template(
-        "student_dashboard.html", 
-        student=current_student, 
-        attendance_list=attendance_history
-    )
-
 @app.route("/delete_student/<int:id>")
 def delete_student(id):
+    if "admin" not in session:
+        return redirect(url_for("admin_login"))
+        
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM attendance WHERE student_id=%s", (id,))
@@ -542,8 +525,23 @@ def present(id):
 
     return redirect(url_for("attendance"))
 
+@app.route("/absent/<int:id>")
+def absent(id):
+    today = date.today()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES(%s,%s,%s)", (id, today, "Absent"))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for("attendance"))
+
 @app.route("/edit_student/<int:id>", methods=["GET","POST"])
 def edit_student(id):
+    if "admin" not in session:
+        return redirect(url_for("admin_login"))
+
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -565,7 +563,7 @@ def edit_student(id):
 
 @app.route("/reports")
 def reports():
-    if "student" not in session and "admin" not in session:
+    if "student" not in session and "admin" not in session and "teacher" not in session:
         return redirect(url_for("login"))
 
     conn = get_connection()
@@ -581,18 +579,6 @@ def reports():
     conn.close()
 
     return render_template("reports.html", reports=reports_list)   
-
-@app.route("/absent/<int:id>")
-def absent(id):
-    today = date.today()
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO attendance (student_id, date, status) VALUES(%s,%s,%s)", (id, today, "Absent"))
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-    return redirect(url_for("attendance"))
 
 # --- STUDENT REGISTRATION ---
 @app.route("/register", methods=["GET", "POST"])
@@ -702,7 +688,6 @@ def teacher_dashboard():
 
     conn = get_connection()
     cursor = conn.cursor()
-    
     cursor.execute("SELECT id, name, register_number, department FROM students WHERE department=%s", (session["teacher_dept"],))
     students_list = cursor.fetchall()
     cursor.close()
@@ -719,7 +704,6 @@ def teacher_submit_attendance():
     today = date.today()
     conn = get_connection()
     cursor = conn.cursor()
-    
     cursor.execute("SELECT id FROM students WHERE department=%s", (session["teacher_dept"],))
     students_list = cursor.fetchall()
     
@@ -745,5 +729,5 @@ def teacher_submit_attendance():
 
 # --- SAFELY START AND CREATE TABLES ---
 if __name__ == "__main__":
-    create_tables_automatically()  # ஆப் தொடங்கும்போதே டேபிள்களை பேக்-எண்டில் உருவாக்கும்!
+    create_tables_automatically()  
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
