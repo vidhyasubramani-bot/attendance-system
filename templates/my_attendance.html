@@ -1,31 +1,70 @@
 {% extends "base.html" %}
 {% block content %}
-<div style="display: flex; min-height: 100vh;">
-    <div style="width: 260px; background-color: #1a202c; color: white; padding-top: 30px;">
-        <h3 style="text-align: center; margin-bottom: 30px;">Smart Attendance</h3>
-        <p style="padding: 10px 25px; margin: 0;"><a href="{{ url_for('dashboard') }}" style="color: #cbd5e1; text-decoration: none;"><i class="fas fa-arrow-left"></i> Back to Dashboard</a></p>
+
+<style>
+    @media (max-width: 768px) {
+        .page-container {
+            flex-direction: column !important;
+        }
+        .sidebar-panel {
+            width: 100% !important;
+            padding: 20px 15px !important;
+            text-align: center !important;
+            min-height: auto !important;
+        }
+        .sidebar-panel h3 {
+            margin-bottom: 15px !important;
+        }
+        .main-content-panel {
+            padding: 20px !important;
+        }
+    }
+</style>
+
+<div class="page-container" style="display: flex; min-height: 100vh;">
+    <div class="sidebar-panel" style="width: 260px; background-color: #1a202c; color: white; padding-top: 30px; box-sizing: border-box;">
+        <h3 style="text-align: center; margin-bottom: 30px; font-weight: 600;">Smart Attendance</h3>
+        <p style="padding: 10px 25px; margin: 0;">
+            <a href="{{ url_for('dashboard') }}" style="color: #cbd5e1; text-decoration: none; font-size: 0.95rem;">
+                <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Dashboard
+            </a>
+        </p>
     </div>
     
-    <div style="flex: 1; padding: 40px; background-color: #f7fafc;">
-        <h2 style="color: #2d3748; margin-bottom: 25px;"><i class="fas fa-calendar-alt" style="color: #3182ce;"></i> Comprehensive Attendance Records</h2>
-        <div style="background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto;">
+    <div class="main-content-panel" style="flex: 1; padding: 40px; background-color: #f7fafc; box-sizing: border-box;">
+        <h2 style="color: #2d3748; margin-bottom: 25px; font-weight: 600;">
+            <i class="fas fa-calendar-alt" style="color: #3182ce; margin-right: 8px;"></i> Comprehensive Attendance Records
+        </h2>
+        
+        <div style="background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; border: 1px solid #e2e8f0;">
             <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 500px;">
                 <thead>
-                    <tr style="background-color: #edf2f7; border-bottom: 2px solid #e2e8f0;">
-                        <th style="padding: 15px 20px; color: #4a5568; font-weight: 600;">Date Timestamp</th>
-                        <th style="padding: 15px 20px; color: #4a5568; font-weight: 600;">Course Subject Name</th>
-                        <th style="padding: 15px 20px; color: #4a5568; font-weight: 600;">Log Status</th>
+                    <tr style="background-color: #edf2f7; border-bottom: 2px solid #e2e8f0; color: #4a5568; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <th style="padding: 15px 20px; font-weight: 600;">Date Timestamp</th>
+                        <th style="padding: 15px 20px; font-weight: 600;">Course Subject Name</th>
+                        <th style="padding: 15px 20px; font-weight: 600;">Log Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for log in history %}
-                    <tr style="border-bottom: 1px solid #edf2f7;">
-                        <td style="padding: 15px 20px; color: #2d3748;">{{ log.date }}</td>
-                        <td style="padding: 15px 20px; color: #2d3748;">{{ log.subject }}</td>
+                    <tr style="border-bottom: 1px solid #edf2f7; color: #4a5568;">
+                        {% set log_date = log.date if log.date is defined else (log[0] if log is sequence else '') %}
+                        {% set log_subject = log.subject if log.subject is defined else (log[1] if log is sequence else '') %}
+                        {% set log_status = log.status if log.status is defined else (log[2] if log is sequence else '') %}
+                        
+                        <td style="padding: 15px 20px; color: #2d3748; font-weight: 500;">{{ log_date }}</td>
+                        <td style="padding: 15px 20px; color: #2d3748;">{{ log_subject }}</td>
                         <td style="padding: 15px 20px;">
-                            <span style="background-color: {% if log.status == 'Present' %}#c6f6d5{% else %}#fed7d7{% endif %}; color: {% if log.status == 'Present' %}#22543d{% else %}#742a2a{% endif %}; padding: 4px 10px; border-radius: 4px; font-weight: 500; font-size: 0.9rem;">
-                                {{ log.status }}
+                            <span style="background-color: {% if log_status == 'Present' %}#c6f6d5{% else %}#fed7d7{% endif %}; color: {% if log_status == 'Present' %}#22543d{% else %}#742a2a{% endif %}; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; display: inline-block;">
+                                {% if log_status == 'Present' %}● Present{% else %}● Absent{% endif %}
                             </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" style="padding: 50px; text-align: center; color: #a0aec0; font-size: 1rem;">
+                            <i class="fas fa-clipboard-list fa-2x mb-3" style="display: block; color: #cbd5e0; margin-bottom: 10px;"></i>
+                            No attendance history logs discovered for this profile.
                         </td>
                     </tr>
                     {% endfor %}
@@ -34,4 +73,5 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
