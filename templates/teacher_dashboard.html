@@ -27,8 +27,8 @@
         {% endwith %}
 
         <form action="{{ url_for('teacher_submit_attendance') }}" method="POST">
-            <div style="background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden; margin-bottom: 25px;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <div style="background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow-x: auto; margin-bottom: 25px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 500px;">
                     <thead>
                         <tr style="background-color: #ecf0f1; border-bottom: 2px solid #bdc3c7; color: #34495e;">
                             <th style="padding: 15px 20px;">Student Name</th>

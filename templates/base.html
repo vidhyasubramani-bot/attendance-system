@@ -77,6 +77,144 @@
         .register-global-btn:hover {
             background: #2d3748;
         }
+
+        /* Mobile and Tablet Responsive Media Queries */
+        @media (max-width: 768px) {
+            /* Navbar Responsiveness */
+            .global-navbar {
+                flex-direction: column !important;
+                padding: 15px 20px !important;
+                gap: 15px !important;
+                text-align: center !important;
+            }
+            .global-navbar .nav-links-wrapper {
+                flex-direction: column !important;
+                gap: 12px !important;
+                width: 100% !important;
+            }
+            .global-navbar .nav-links-wrapper a {
+                display: block !important;
+                width: 100% !important;
+                text-align: center !important;
+                padding: 8px 0 !important;
+            }
+            .teacher-portal-btn, .register-global-btn {
+                display: inline-flex !important;
+                justify-content: center !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Logins & General Login Cards */
+            .login-navbar {
+                flex-direction: column !important;
+                padding: 15px 20px !important;
+                gap: 10px !important;
+                text-align: center !important;
+            }
+            .login-navbar .nav-links {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: center !important;
+                flex-wrap: wrap !important;
+                gap: 10px !important;
+                margin: 0 !important;
+            }
+            .login-navbar .nav-links a {
+                margin: 0 !important;
+            }
+            .login-container {
+                padding: 20px 10px !important;
+                min-height: auto !important;
+            }
+            .login-card {
+                flex-direction: column !important;
+                width: 100% !important;
+                max-width: 450px !important;
+                margin: 0 auto !important;
+            }
+            .login-left {
+                display: none !important; /* Hide left vector section on mobile */
+            }
+            .login-right {
+                padding: 30px 20px !important;
+            }
+
+            /* Dashboard & Sidebars */
+            div[style*="display: flex; min-height: 100vh;"] {
+                flex-direction: column !important;
+            }
+            div[style*="width: 260px;"] {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 20px !important;
+                text-align: center !important;
+            }
+            div[style*="flex: 1; padding: 40px;"] {
+                padding: 20px 15px !important;
+            }
+
+            /* Grid Layouts (Profile, stats, and custom tables) */
+            div[style*="display: grid; grid-template-columns: 1fr 1fr;"] {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+            .stats-grid, .data-grid {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+
+            /* Responsive Buttons & Form Layouts */
+            div[style*="display: flex; gap: 12px; align-items: center;"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            div[style*="display: flex; gap: 12px; align-items: center;"] > button,
+            div[style*="display: flex; gap: 12px; align-items: center;"] > a {
+                width: 100% !important;
+                flex: none !important;
+                box-sizing: border-box !important;
+                text-align: center !important;
+            }
+            div[style*="display: flex; justify-content: space-between; align-items: center; border-top:"] {
+                flex-direction: column !important;
+                gap: 15px !important;
+                text-align: center !important;
+            }
+            div[style*="display: flex; justify-content: space-between; align-items: center; border-top:"] > button {
+                width: 100% !important;
+            }
+
+            /* Header card on students.html */
+            div[style*="background: #1a202c; color: white; padding: 30px;"] {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                padding: 20px !important;
+                gap: 15px !important;
+            }
+            div[style*="background: #2d3748; padding: 15px 25px;"] {
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Search form in students.html */
+            form[action*="students"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+            form[action*="students"] > input, 
+            form[action*="students"] > button, 
+            form[action*="students"] > a {
+                width: 100% !important;
+                box-sizing: border-box !important;
+                text-align: center !important;
+            }
+            
+            /* Text inputs & general form controls stack cleanly */
+            input, select, button {
+                font-size: 16px !important; /* Prevents auto-zoom on iOS */
+            }
+        }
     </style>
 </head>
 <body>

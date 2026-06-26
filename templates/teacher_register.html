@@ -21,7 +21,7 @@
             {% with messages = get_flashed_messages() %}
               {% if messages %}
                 {% for message in messages %}
-                  <div style="color: #left; background-color: #fff5f5; border: 1px solid #fed7d7; color: #c53030; padding: 12px; border-radius: 6px; text-align: center; margin-bottom: 20px; font-size: 0.9rem;">
+                  <div style="background-color: #fff5f5; border: 1px solid #fed7d7; color: #c53030; padding: 12px; border-radius: 6px; text-align: center; margin-bottom: 20px; font-size: 0.9rem;">
                       <i class="fas fa-exclamation-circle"></i> {{ message }}
                   </div>
                 {% endfor %}

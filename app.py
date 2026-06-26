@@ -425,7 +425,8 @@ def download_pdf():
     cursor.close()
     conn.close()
 
-    file_path = "/tmp/attendance_report.pdf"  
+    import tempfile
+    file_path = os.path.join(tempfile.gettempdir(), "attendance_report.pdf")  
     pdf = SimpleDocTemplate(file_path, pagesize=letter)
     table_data = [["Student ID", "Name", "Date", "Status"]]
 
@@ -458,7 +459,8 @@ def export_excel():
     JOIN students ON students.id = attendance.student_id
     """
     df = pd.read_sql(query, engine)
-    file_name = "/tmp/attendance_report.xlsx"  
+    import tempfile
+    file_name = os.path.join(tempfile.gettempdir(), "attendance_report.xlsx")  
     df.to_excel(file_name, index=False)
 
     return send_file(file_name, as_attachment=True)

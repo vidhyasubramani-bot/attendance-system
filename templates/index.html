@@ -14,6 +14,34 @@
             padding: 80px 0;
             text-align: center;
         }
+
+        /* Mobile and Tablet Responsive Media Queries */
+        @media (max-width: 768px) {
+            .navbar .container {
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 15px !important;
+            }
+            .navbar .container > div {
+                flex-direction: column !important;
+                width: 100% !important;
+                gap: 10px !important;
+            }
+            .navbar .container .btn {
+                width: 100% !important;
+                text-align: center !important;
+                margin: 0 !important;
+            }
+            .hero-banner {
+                padding: 40px 15px !important;
+            }
+            .hero-banner h1 {
+                font-size: 1.8rem !important;
+            }
+            .hero-banner p {
+                font-size: 1rem !important;
+            }
+        }
     </style>
 </head>
 <body>
